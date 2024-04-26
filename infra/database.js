@@ -7,11 +7,19 @@ async function query(queryObject) {
     user: process.env.POSTGRES_USER,
     database: process.env.POSTGRES_DB,
     password: process.env.POSTGRES_PASSWORD,
-    ssl: true,
+    ssl: getSSLValues(),
   });
 
   try {
-    await client.connect();
+    client
+      .connect()
+      .then(() => {
+        console.log("Conexão bem-sucedida ao banco de dados");
+        // Execute suas consultas aqui
+      })
+      .catch((err) => {
+        console.error("Erro ao conectar ao banco de dados:", err);
+      });
     const result = await client.query(queryObject);
     return result;
   } catch (error) {
@@ -25,3 +33,13 @@ async function query(queryObject) {
 export default {
   query: query,
 };
+
+function getSSLValues() {
+  if (process.env.POSTGRES_CA) {
+    return {
+      ca: process.env.POSTGRES_CA,
+    };
+  }
+
+  return process.env.NODE_ENV === "development" ? false : true;
+}
